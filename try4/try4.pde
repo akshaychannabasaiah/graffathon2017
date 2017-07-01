@@ -1,3 +1,8 @@
+int start_ripple = 600;
+int stop_ripple =1200;
+
+
+float j=0.5;
 //ripple stuff
 import moonlander.library.*;
 import ddf.minim.*;
@@ -118,7 +123,7 @@ class ZObject {
       }
     }
     //if (radius<1 && value==1) {
-    if (radius<1) {
+    if (radius<1 && count >start_ripple) {
       for (int i=0; i<2; i++) {
         drops.add(new Circle(posX, posY, r-10*i));
       }
@@ -134,6 +139,7 @@ void blurred_circle(float x, float y, float rad, float blur, color col, float le
   float level_distance = BLUR_AMOUNT*(blur)/levels;
   for (float i=0.0; i<levels*2; i++) {
     fill(col, 255*(levels*2-i)/(levels*2));
+    
     ellipse(x, y, rad+(i-levels)*level_distance, rad+(i-levels)*level_distance);
   }
 }
@@ -161,12 +167,15 @@ void sortBubbles() {
 }
 
 void setup() {
+    frameRate(24);
+  
   //audio stuff  
   moonlander = Moonlander.initWithSoundtrack(this, "Eternal_Terminal.mp3", 120, 4);
   moonlander.start();
 
 
 
+  //size(800, 600);
   fullScreen(P3D);  
   //size(1920, 1080);
   smooth();
@@ -174,7 +183,7 @@ void setup() {
 
   objects = new ArrayList();
   //Randomly generate the bubbles
-    for (int i=0; i<N; i++) {
+  for (int i=0; i<N; i++) {
     objects.add(new ZObject(random(1.0f), random(1.0f), random(1.0f), color(random(20.0, 20.0), random(150.0, 190.0), random(150.0, 190.0))));
   }
 
@@ -210,8 +219,12 @@ float xoffs = 0.5;
 float yoffs = 0.5;
 int count=0;
 int n=0;
+float m=0;
 void draw() {
-  n=min(n+1,500);
+  m=min((m+0.1), 150);
+  n=(int)m;
+  if (count>start_ripple+200){
+  BACKGROUND = color(0+(count-start_ripple-200)/3, 30+(count-start_ripple-200)/3, 30+(count-start_ripple-200)/3);}
   //objects = new ArrayList();
   //for (int i=0; i<N; i++) {
   //  objects.add(new ZObject(random(1.0f), random(1.0f), random(1.0f), color(random(20.0, 20.0), random(150.0, 190.0), random(150.0, 190.0))));
@@ -263,9 +276,13 @@ class Circle {
     y=tempY;
     rad=tempR;
   }
+  
   void display() {
     noFill();
-    stroke(100, 100-rad/2);
+    //stroke(100, 100-rad/2);
+    //strokeWeight(0.5);
+    stroke(255, 200-2*rad);
+    
     strokeWeight(0.5);
     ellipse(x, y, rad, rad);
     noStroke();
@@ -273,7 +290,8 @@ class Circle {
 
   void movement() {
     rad++;
-    if (100-rad<0) {
+    if (255-2*rad<0) {
+    //if (false) {
       drops.remove(0);
     }
   }
