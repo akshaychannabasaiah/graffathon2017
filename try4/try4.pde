@@ -186,8 +186,16 @@ boolean zoomOut = true;
 
 float xoffs = 0.5;
 float yoffs = 0.5;
+float cameraYOff = 0.015;
 void draw() {
   background(BACKGROUND);
+  camera(width/2.0, height/2.0 , ((height/2.0) / tan(PI*30.0 / 180.0) - cameraYOff),
+  width/2.0, height/2.0, 0,
+  0, 1, 0); 
+  cameraYOff += 2.15;
+  // eyeX, eyeY, eyeZ
+       //  0.0, 0.0, 0.0, // centerX, centerY, centerZ
+       //  0.0, 1.0, 0.0); // upX, upY, upZ
   //xoffs = xoffs*0.9 + 0.1*mouseX/WIDTH;
   //yoffs = yoffs*0.9 + 0.1*mouseY/HEIGHT;
 
