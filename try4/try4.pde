@@ -1,7 +1,11 @@
-//////////////////////////////////
-// Bubbles 2
-//////////////////////////////////
-// copyright: Daniel Erickson 2012
+//ripple stuff
+import moonlander.library.*;
+import ddf.minim.*;
+Moonlander moonlander;
+double value=0;
+
+//ripple stuff end
+
 //ripple stuff
 ArrayList<Circle> drops;
 //ripple stuff end
@@ -9,9 +13,10 @@ ArrayList<Circle> drops;
 int WIDTH = 1920;
 int HEIGHT = 1080;
 float ZOOM = 1;
-int N = 150*(int)ZOOM;
+//int num=0;
+int N = 500*(int)ZOOM;
 //int N = 150*(int)ZOOM;
-float RADIUS = HEIGHT/10;
+float RADIUS = HEIGHT/30;
 float SPEED = 0.00003;
 float FOCAL_LENGTH = 0.5;
 float BLUR_AMOUNT = 50;
@@ -108,7 +113,18 @@ class ZObject {
     float posY = (ZOOM*y*HEIGHT*(1+z*z)) - ZOOM*yoffs*HEIGHT*z*z;
     float radius = z*xsize;
     if (posX> -xsize*2 && posX < WIDTH+xsize*2 && posY > -xsize*2 && posY < HEIGHT+xsize*2) {
-      blurred_circle(posX, posY, radius, abs(z-FOCAL_LENGTH), shaded_color, MIN_BLUR_LEVELS + (z*BLUR_LEVEL_COUNT));
+      if (true) {
+        blurred_circle(posX, posY, radius, abs(z-FOCAL_LENGTH), shaded_color, MIN_BLUR_LEVELS + (z*BLUR_LEVEL_COUNT));
+      }
+    }
+    //if (radius<1 && value==1) {
+    if (radius<1) {
+      for (int i=0; i<2; i++) {
+        drops.add(new Circle(posX, posY, r-10*i));
+      }
+
+
+      text("Value from moonlander: " + radius, 10, 20);
     }
   }
 }
@@ -145,14 +161,20 @@ void sortBubbles() {
 }
 
 void setup() {
+  //audio stuff  
+  moonlander = Moonlander.initWithSoundtrack(this, "Eternal_Terminal.mp3", 120, 4);
+  moonlander.start();
+
+
+
   fullScreen(P3D);  
   //size(1920, 1080);
   smooth();
   noStroke();
 
   objects = new ArrayList();
-  // Randomly generate the bubbles
-  for (int i=0; i<N; i++) {
+  //Randomly generate the bubbles
+    for (int i=0; i<N; i++) {
     objects.add(new ZObject(random(1.0f), random(1.0f), random(1.0f), color(random(20.0, 20.0), random(150.0, 190.0), random(150.0, 190.0))));
   }
 
@@ -186,30 +208,49 @@ boolean zoomOut = true;
 
 float xoffs = 0.5;
 float yoffs = 0.5;
+int count=0;
+int n=0;
 void draw() {
+  n=min(n+1,500);
+  //objects = new ArrayList();
+  //for (int i=0; i<N; i++) {
+  //  objects.add(new ZObject(random(1.0f), random(1.0f), random(1.0f), color(random(20.0, 20.0), random(150.0, 190.0), random(150.0, 190.0))));
+  //}
+  //N++;
+  //audio stuff
+  moonlander.update();
+  value = moonlander.getValue("my_track");
+
+
+  //temp useless
+  count++;
   background(BACKGROUND);
   //xoffs = xoffs*0.9 + 0.1*mouseX/WIDTH;
   //yoffs = yoffs*0.9 + 0.1*mouseY/HEIGHT;
 
-  for (int i=0; i<N; i++) {
+  for (int i=0; i<n; i++) {
     ZObject current = (ZObject)objects.get(i);
     current.update(zoomIn, zoomOut);
   }
   sortBubbles();
 
-  for (int i=0; i<N; i++) {
+  for (int i=0; i<n; i++) {
     ((ZObject)objects.get(i)).draw(xoffs, yoffs);
   }
   //fill(108, 192, 255);
   //noStroke();
   //rect(0, 0, width, height);
-  for (int i=0;i<drops.size();i++) {
+  for (int i=0; i<drops.size(); i++) {
     Circle drop=drops.get(i);
     drop.display();
     drop.movement();
   }
   //drops.add(new Circle((int)(randomGaussian()*100+300),(int)(randomGaussian()*100+300), r));
-  
+  fill(255);
+  strokeWeight(2);
+  textSize(16);
+  text("Value from moonlander: " + int(frameRate), 10, 20);
+  strokeWeight(0.5);
 }
 
 
@@ -224,16 +265,15 @@ class Circle {
   }
   void display() {
     noFill();
-    stroke(255, 255-rad/2);
+    stroke(100, 100-rad/2);
     strokeWeight(0.5);
     ellipse(x, y, rad, rad);
     noStroke();
-    
   }
 
   void movement() {
     rad++;
-    if (255-rad/2<0) {
+    if (100-rad<0) {
       drops.remove(0);
     }
   }
