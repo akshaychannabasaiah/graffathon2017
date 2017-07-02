@@ -31,122 +31,6 @@ float ZSTEP = 0.015;
 color BACKGROUND = color(0, 30, 30);
 
 
-
-// region Death
-final float g = 0.1;
-ArrayList<PVector> deathPath = new ArrayList();
-int deathIndex = 0;
-Body bs[];
-
-class Body {
-  float m;
-  PVector p, q, s;
-
-  Body(float m, PVector p) {
-    this.m = m;
-    this.p = p;
-    q = p;
-    this.s = new PVector(0, 0);
-  }
-
-  void update() {
-    s.mult(0.98);
-    p = PVector.add(p, s);
-  }
-
-  void attract(Body b) {
-    float d = constrain(PVector.dist(p, b.p), 10, 100);
-    PVector f = PVector.mult(PVector.sub(b.p, p), b.m * m * g / (d * d));
-    PVector a = PVector.div(f, m);
-    s.add(a);
-  }
-
-  void show() {
-    line(p.x, p.y, q.x, q.y);
-    q = p;
-  }
-}
-void setupLife()
-{
-}
-void setupDeath()
-{
-
-  background(255);
-  fill(255, 26);
-  deathPath.add(new PVector(30.5, 20.5));
-  deathPath.add(new PVector(30.5, 20.5));
-  deathPath.add(new PVector(30.5, 20.5));
-  deathPath.add(new PVector(30.5, 20.5));
-  deathPath.add(new PVector(30.5, 20.5));
-  deathPath.add(new PVector(30.5, 20.5));
-  deathPath.add(new PVector(30.5, 20.5));
-  deathPath.add(new PVector(30.5, 20.5));
-  deathPath.add(new PVector(30.5, 20.5));
-  deathPath.add(new PVector(30.5, 20.5));
-  deathPath.add(new PVector(20.5, 10.5));
-  deathPath.add(new PVector(20.5, 10.5));
-  deathPath.add(new PVector(20.5, 10.5));
-  deathPath.add(new PVector(20.5, 10.5));
-  deathPath.add(new PVector(60.5, 70.5));
-  deathPath.add(new PVector(60.5, 70.5));
-  deathPath.add(new PVector(60.5, 70.5));
-  deathPath.add(new PVector(60.5, 70.5));
-  deathPath.add(new PVector(60.5, 70.5));
-  deathPath.add(new PVector(60.5, 70.5));
-  deathPath.add(new PVector(60.5, 70.5));
-  deathPath.add(new PVector(60.5, 70.5));
-  deathPath.add(new PVector(60.5, 70.5));
-  deathPath.add(new PVector(60.5, 70.5));
-  deathPath.add(new PVector(60.5, 70.5));
-  deathPath.add(new PVector(60.5, 70.5));
-  deathPath.add(new PVector(60.5, 70.5));
-  deathPath.add(new PVector(60.5, 70.5));
-  deathPath.add(new PVector(60.5, 70.5));
-  deathPath.add(new PVector(60.5, 70.5));
-  deathPath.add(new PVector(160.5, 170.5));
-  deathPath.add(new PVector(160.5, 170.5));
-  deathPath.add(new PVector(160.5, 170.5));
-  deathPath.add(new PVector(160.5, 170.5));
-  deathPath.add(new PVector(160.5, 170.5));
-  deathPath.add(new PVector(160.5, 170.5));
-  deathPath.add(new PVector(160.5, 170.5));
-  deathPath.add(new PVector(160.5, 170.5));
-  deathPath.add(new PVector(160.5, 170.5));
-  deathPath.add(new PVector(160.5, 170.5));
-  deathPath.add(new PVector(160.5, 170.5));
-  deathPath.add(new PVector(160.5, 170.5));
-  deathPath.add(new PVector(160.5, 170.5));
-  deathPath.add(new PVector(160.5, 170.5));
-  deathPath.add(new PVector(160.5, 170.5));
-  bs = new Body[1000];
-  for (int i = 0; i < bs.length; i++) {
-    bs[i] = new Body(1, new PVector(random(width), random(height)));
-  }
-}
-void drawDeath()
-{
-  noStroke();
-  rect(0, 0, width, height);
-
-  stroke(0);
-  Body a = new Body(1000, deathPath.get(deathIndex));
-  if (deathIndex + 1 == deathPath.size())
-  {
-    deathIndex = 0;
-  } else 
-  {
-    deathIndex++;
-  }
-  for (Body b : bs) {
-    b.show();
-    b.attract(a);
-    b.update();
-  }
-}
-// end region Death
-
-
 class ZObject {
   float x, y, z, xsize, ysize;
   color bubble_color;
@@ -315,7 +199,8 @@ void setup() {
 
   //ripple stuff end
 
-  setupDeath();
+  setupAlive();
+  setupDeath();  
 }
 //ripple stuff
 float r=0;
@@ -413,7 +298,8 @@ void draw() {
   strokeWeight(0.5);
 
   if (value!=420 && value == 70) {
-    drawDeath();
+    //drawDeath();
+    drawAlive();
   }
 }
 
@@ -447,3 +333,300 @@ class Circle {
     }
   }
 }
+
+
+// region Alive
+Ptc [] ptcs;
+ArrayList<PVector> alivePath = new ArrayList();
+int aliveIndex = 0;
+float gMag = 1, gVelMax = 10, gThres, gThresT = 100, gBgAlpha = 255, gBgAlphaT = 32, sliderForce = 1, sliderGhost = 32, sliderThres = 100;
+boolean aliveAnimate = true;
+
+void setupAlive()
+{
+  initPtcs(160);
+  alivePath.add(new PVector(width/2, height/2));
+  alivePath.add(new PVector(width/2, height/2));
+  alivePath.add(new PVector(width/2, height/2));
+  alivePath.add(new PVector(width/2, height/2));
+  alivePath.add(new PVector(width/2, height/2));
+  alivePath.add(new PVector(width*0.8, height*0.8));
+  alivePath.add(new PVector(width*0.8, height*0.8));
+  alivePath.add(new PVector(width*0.8, height*0.8));
+  alivePath.add(new PVector(width*0.8, height*0.8));
+  alivePath.add(new PVector(width*0.8, height*0.8));
+  alivePath.add(new PVector(width*0.8, height*0.2));
+  alivePath.add(new PVector(width*0.8, height*0.2));
+  alivePath.add(new PVector(width*0.8, height*0.2));
+  alivePath.add(new PVector(width*0.8, height*0.2));
+  alivePath.add(new PVector(width*0.8, height*0.2));
+  alivePath.add(new PVector(width*0.2, height*0.8));
+  alivePath.add(new PVector(width*0.2, height*0.8));
+  alivePath.add(new PVector(width*0.2, height*0.8));
+  alivePath.add(new PVector(width*0.2, height*0.8));
+  alivePath.add(new PVector(width*0.2, height*0.8));
+  alivePath.add(new PVector(width*0.2, height*0.2));
+  alivePath.add(new PVector(width*0.2, height*0.2));
+  alivePath.add(new PVector(width*0.2, height*0.2));
+  alivePath.add(new PVector(width*0.2, height*0.2));
+  alivePath.add(new PVector(width*0.2, height*0.2));
+  alivePath.add(new PVector(width*0.0, height*0.0));
+  alivePath.add(new PVector(width*0.0, height*0.0));
+  alivePath.add(new PVector(width*0.0, height*0.0));
+  alivePath.add(new PVector(width*0.0, height*0.0));
+  alivePath.add(new PVector(width*0.0, height*0.0));
+  alivePath.add(new PVector(width*1.0, height*1.0));
+  alivePath.add(new PVector(width*1.0, height*1.0));
+  alivePath.add(new PVector(width*1.0, height*1.0));
+  alivePath.add(new PVector(width*1.0, height*1.0));
+  alivePath.add(new PVector(width*1.0, height*1.0));
+}
+
+void drawAlive()
+{
+
+  gThres = lerp(gThres, gThresT, .02);
+  gBgAlpha = lerp(gBgAlpha, gBgAlphaT, .02);
+  gMag = sliderForce;
+
+  updatePtcs();
+
+  noStroke();
+  fill(255, gBgAlpha);
+  rect(0, 0, width, height);
+
+  drawPtcs();
+  drawCnts();
+}
+
+void initPtcs(int amt) {
+  ptcs = new Ptc[amt];
+  for (int i=0; i<ptcs.length; i++) {
+    ptcs[i] = new Ptc();
+  }
+}
+
+void updatePtcs() {
+  if (aliveAnimate) {
+    for (int i=0; i<ptcs.length; i++) {
+      ptcs[i].update(alivePath.get(aliveIndex).x, alivePath.get(aliveIndex).y);
+      if (aliveIndex + 1 == alivePath.size())
+      {
+        aliveIndex = 0;
+      } else 
+      {
+        aliveIndex++;
+      }
+    }
+  } else {
+    for (int i=0; i<ptcs.length; i++) {
+      ptcs[i].update();
+    }
+  }
+}
+
+void drawPtcs() {
+  for (int i=0; i<ptcs.length; i++) {
+    ptcs[i].drawPtc();
+  }
+}
+
+void drawCnts() {
+  for (int i=0; i<ptcs.length; i++) {
+    for (int j=i+1; j<ptcs.length; j++) {
+      float d = dist(ptcs[i].pos.x, ptcs[i].pos.y, ptcs[j].pos.x, ptcs[j].pos.y);
+      if (d<gThres) {
+        float scalar = map(d, 0, gThres, 1, 0);
+        ptcs[i].drawCnt(ptcs[j], scalar);
+      }
+    }
+  }
+}
+class Ptc {
+
+  PVector pos, pPos, vel, acc;
+  float decay, weight, magScalar;
+
+  Ptc() {
+    pos = new PVector(random(width), random(height));
+    pPos = new PVector(pos.x, pos.y);
+    vel = new PVector(0, 0);
+    acc = new PVector(0, 0);
+
+    weight = random(1, 10);
+    decay = map(weight, 1, 10, .95, .85);
+    magScalar = map(weight, 1, 10, .5, .05);
+  }
+
+  void update(float tgtX, float tgtY) {
+
+    pPos.set(pos.x, pos.y);
+
+    acc.set(tgtX-pos.x, tgtY-pos.y);
+
+    //Use normalize() instead in Java mode
+    float accMag = sqrt(sq(acc.x)+sq(acc.y));
+    acc.mult(1.0/accMag);
+    //------------------------------
+    acc.mult(gMag * magScalar);
+    vel.add(acc);
+    //Use limit() instead in Java mode
+    float velMag = sqrt(sq(vel.x)+sq(vel.y));
+    if (velMag>gVelMax) vel.mult(gVelMax/velMag);
+    //------------------------------
+    pos.add(vel);
+    acc.set(0, 0, 0);
+    boundaryCheck();
+  }
+
+  void update() {
+
+    pPos.set(pos.x, pos.y);
+
+    vel.add(acc);
+    vel.mult(decay);
+    pos.add(vel);
+    acc.set(0, 0);
+
+    boundaryCheck();
+  }
+
+  void drawPtc() {
+    strokeWeight(weight);
+    stroke(0, 255);
+    if (aliveAnimate)line(pos.x, pos.y, pPos.x, pPos.y);
+    else point(pos.x, pos.y);
+  }
+
+  void drawCnt(Ptc coPtc, float scalar) {
+    strokeWeight((weight+coPtc.weight)*.5*scalar);
+    stroke(0, 255*scalar);
+    line(pos.x, pos.y, coPtc.pos.x, coPtc.pos.y);
+  }
+
+  void boundaryCheck() {
+    if (pos.x > width) {
+      pos.x = width;
+      vel.x *= -1;
+    } else if (pos.x < 0) {
+      pos.x = 0;
+      vel.x *= -1;
+    }
+    if (pos.y > height) {
+      vel.y *= -1;
+    } else if (pos.y < 0) {
+      vel.y *= -1;
+    }
+  }
+}
+// end region Alive
+// region Death
+final float g = 0.1;
+ArrayList<PVector> deathPath = new ArrayList();
+int deathIndex = 0;
+Body bs[];
+
+class Body {
+  float m;
+  PVector p, q, s;
+
+  Body(float m, PVector p) {
+    this.m = m;
+    this.p = p;
+    q = p;
+    this.s = new PVector(0, 0);
+  }
+
+  void update() {
+    s.mult(0.98);
+    p = PVector.add(p, s);
+  }
+
+  void attract(Body b) {
+    float d = constrain(PVector.dist(p, b.p), 10, 100);
+    PVector f = PVector.mult(PVector.sub(b.p, p), b.m * m * g / (d * d));
+    PVector a = PVector.div(f, m);
+    s.add(a);
+  }
+
+  void show() {
+    line(p.x, p.y, q.x, q.y);
+    q = p;
+  }
+}
+void setupDeath()
+{
+
+  background(255);
+  fill(255, 26);
+  deathPath.add(new PVector(30.5, 20.5));
+  deathPath.add(new PVector(30.5, 20.5));
+  deathPath.add(new PVector(30.5, 20.5));
+  deathPath.add(new PVector(30.5, 20.5));
+  deathPath.add(new PVector(30.5, 20.5));
+  deathPath.add(new PVector(30.5, 20.5));
+  deathPath.add(new PVector(30.5, 20.5));
+  deathPath.add(new PVector(30.5, 20.5));
+  deathPath.add(new PVector(30.5, 20.5));
+  deathPath.add(new PVector(30.5, 20.5));
+  deathPath.add(new PVector(20.5, 10.5));
+  deathPath.add(new PVector(20.5, 10.5));
+  deathPath.add(new PVector(20.5, 10.5));
+  deathPath.add(new PVector(20.5, 10.5));
+  deathPath.add(new PVector(60.5, 70.5));
+  deathPath.add(new PVector(60.5, 70.5));
+  deathPath.add(new PVector(60.5, 70.5));
+  deathPath.add(new PVector(60.5, 70.5));
+  deathPath.add(new PVector(60.5, 70.5));
+  deathPath.add(new PVector(60.5, 70.5));
+  deathPath.add(new PVector(60.5, 70.5));
+  deathPath.add(new PVector(60.5, 70.5));
+  deathPath.add(new PVector(60.5, 70.5));
+  deathPath.add(new PVector(60.5, 70.5));
+  deathPath.add(new PVector(60.5, 70.5));
+  deathPath.add(new PVector(60.5, 70.5));
+  deathPath.add(new PVector(60.5, 70.5));
+  deathPath.add(new PVector(60.5, 70.5));
+  deathPath.add(new PVector(60.5, 70.5));
+  deathPath.add(new PVector(60.5, 70.5));
+  deathPath.add(new PVector(160.5, 170.5));
+  deathPath.add(new PVector(160.5, 170.5));
+  deathPath.add(new PVector(160.5, 170.5));
+  deathPath.add(new PVector(160.5, 170.5));
+  deathPath.add(new PVector(160.5, 170.5));
+  deathPath.add(new PVector(160.5, 170.5));
+  deathPath.add(new PVector(160.5, 170.5));
+  deathPath.add(new PVector(160.5, 170.5));
+  deathPath.add(new PVector(160.5, 170.5));
+  deathPath.add(new PVector(160.5, 170.5));
+  deathPath.add(new PVector(160.5, 170.5));
+  deathPath.add(new PVector(160.5, 170.5));
+  deathPath.add(new PVector(160.5, 170.5));
+  deathPath.add(new PVector(160.5, 170.5));
+  deathPath.add(new PVector(160.5, 170.5));
+  bs = new Body[1000];
+  for (int i = 0; i < bs.length; i++) {
+    bs[i] = new Body(1, new PVector(random(width), random(height)));
+  }
+}
+void drawDeath()
+{
+  noStroke();
+  rect(0, 0, width, height);
+
+  stroke(0);
+  Body a = new Body(1000, deathPath.get(deathIndex));
+  if (deathIndex + 1 == deathPath.size())
+  {
+    deathIndex = 0;
+  } else 
+  {
+    deathIndex++;
+  }
+  for (Body b : bs) {
+    b.show();
+    b.attract(a);
+    b.update();
+  }
+}
+// end region Death
