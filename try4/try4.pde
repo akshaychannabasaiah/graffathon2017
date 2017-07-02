@@ -1,7 +1,16 @@
-//////////////////////////////////
-// Bubbles 2
-//////////////////////////////////
-// copyright: Daniel Erickson 2012
+int start_ripple = 600;
+int stop_ripple =1200;
+
+
+float j=0.5;
+//ripple stuff
+import moonlander.library.*;
+import ddf.minim.*;
+Moonlander moonlander;
+double value=0;
+
+//ripple stuff end
+
 //ripple stuff
 ArrayList<Circle> drops;
 //ripple stuff end
@@ -9,9 +18,10 @@ ArrayList<Circle> drops;
 int WIDTH = 1920;
 int HEIGHT = 1080;
 float ZOOM = 1;
-int N = 150*(int)ZOOM;
+//int num=0;
+int N = 500*(int)ZOOM;
 //int N = 150*(int)ZOOM;
-float RADIUS = HEIGHT/10;
+float RADIUS = HEIGHT/30;
 float SPEED = 0.00003;
 float FOCAL_LENGTH = 0.5;
 float BLUR_AMOUNT = 50;
@@ -19,6 +29,301 @@ int MIN_BLUR_LEVELS = 1;
 int BLUR_LEVEL_COUNT = 4;
 float ZSTEP = 0.015;
 color BACKGROUND = color(0, 30, 30);
+// region Alive
+Ptc [] ptcs;
+ArrayList<PVector> alivePath = new ArrayList();
+int aliveIndex = 0;
+float gMag = 1, gVelMax = 10, gThres, gThresT = 100, gBgAlpha = 255, gBgAlphaT = 32, sliderForce = 1, sliderGhost = 32, sliderThres = 100;
+boolean aliveAnimate = true;
+
+void setupAlive()
+{
+  initPtcs(160);
+  alivePath.add(new PVector(width/2, height/2));
+  alivePath.add(new PVector(width/2, height/2));
+  alivePath.add(new PVector(width/2, height/2));
+  alivePath.add(new PVector(width/2, height/2));
+  alivePath.add(new PVector(width/2, height/2));
+  alivePath.add(new PVector(width*0.8, height*0.8));
+  alivePath.add(new PVector(width*0.8, height*0.8));
+  alivePath.add(new PVector(width*0.8, height*0.8));
+  alivePath.add(new PVector(width*0.8, height*0.8));
+  alivePath.add(new PVector(width*0.8, height*0.8));
+  alivePath.add(new PVector(width*0.8, height*0.2));
+  alivePath.add(new PVector(width*0.8, height*0.2));
+  alivePath.add(new PVector(width*0.8, height*0.2));
+  alivePath.add(new PVector(width*0.8, height*0.2));
+  alivePath.add(new PVector(width*0.8, height*0.2));
+  alivePath.add(new PVector(width*0.2, height*0.8));
+  alivePath.add(new PVector(width*0.2, height*0.8));
+  alivePath.add(new PVector(width*0.2, height*0.8));
+  alivePath.add(new PVector(width*0.2, height*0.8));
+  alivePath.add(new PVector(width*0.2, height*0.8));
+  alivePath.add(new PVector(width*0.2, height*0.2));
+  alivePath.add(new PVector(width*0.2, height*0.2));
+  alivePath.add(new PVector(width*0.2, height*0.2));
+  alivePath.add(new PVector(width*0.2, height*0.2));
+  alivePath.add(new PVector(width*0.2, height*0.2));
+  alivePath.add(new PVector(width*0.0, height*0.0));
+  alivePath.add(new PVector(width*0.0, height*0.0));
+  alivePath.add(new PVector(width*0.0, height*0.0));
+  alivePath.add(new PVector(width*0.0, height*0.0));
+  alivePath.add(new PVector(width*0.0, height*0.0));
+  alivePath.add(new PVector(width*1.0, height*1.0));
+  alivePath.add(new PVector(width*1.0, height*1.0));
+  alivePath.add(new PVector(width*1.0, height*1.0));
+  alivePath.add(new PVector(width*1.0, height*1.0));
+  alivePath.add(new PVector(width*1.0, height*1.0));
+}
+
+void drawAlive()
+{
+
+  gThres = lerp(gThres, gThresT, .02);
+  gBgAlpha = lerp(gBgAlpha, gBgAlphaT, .02);
+  gMag = sliderForce;
+
+  updatePtcs();
+
+  noStroke();
+  fill(255, gBgAlpha);
+  rect(0, 0, width, height);
+
+  drawPtcs();
+  drawCnts();
+}
+
+void initPtcs(int amt) {
+  ptcs = new Ptc[amt];
+  for (int i=0; i<ptcs.length; i++) {
+    ptcs[i] = new Ptc();
+  }
+}
+
+void updatePtcs() {
+  if (aliveAnimate) {
+    for (int i=0; i<ptcs.length; i++) {
+      ptcs[i].update(alivePath.get(aliveIndex).x, alivePath.get(aliveIndex).y);
+      if (aliveIndex + 1 == alivePath.size())
+      {
+        aliveIndex = 0;
+      } else 
+      {
+        aliveIndex++;
+      }
+    }
+  } else {
+    for (int i=0; i<ptcs.length; i++) {
+      ptcs[i].update();
+    }
+  }
+}
+
+void drawPtcs() {
+  for (int i=0; i<ptcs.length; i++) {
+    ptcs[i].drawPtc();
+  }
+}
+
+void drawCnts() {
+  for (int i=0; i<ptcs.length; i++) {
+    for (int j=i+1; j<ptcs.length; j++) {
+      float d = dist(ptcs[i].pos.x, ptcs[i].pos.y, ptcs[j].pos.x, ptcs[j].pos.y);
+      if (d<gThres) {
+        float scalar = map(d, 0, gThres, 1, 0);
+        ptcs[i].drawCnt(ptcs[j], scalar);
+      }
+    }
+  }
+}
+class Ptc {
+
+  PVector pos, pPos, vel, acc;
+  float decay, weight, magScalar;
+
+  Ptc() {
+    pos = new PVector(random(width), random(height));
+    pPos = new PVector(pos.x, pos.y);
+    vel = new PVector(0, 0);
+    acc = new PVector(0, 0);
+
+    weight = random(1, 10);
+    decay = map(weight, 1, 10, .95, .85);
+    magScalar = map(weight, 1, 10, .5, .05);
+  }
+
+  void update(float tgtX, float tgtY) {
+
+    pPos.set(pos.x, pos.y);
+
+    acc.set(tgtX-pos.x, tgtY-pos.y);
+
+    //Use normalize() instead in Java mode
+    float accMag = sqrt(sq(acc.x)+sq(acc.y));
+    acc.mult(1.0/accMag);
+    //------------------------------
+    acc.mult(gMag * magScalar);
+    vel.add(acc);
+    //Use limit() instead in Java mode
+    float velMag = sqrt(sq(vel.x)+sq(vel.y));
+    if (velMag>gVelMax) vel.mult(gVelMax/velMag);
+    //------------------------------
+    pos.add(vel);
+    acc.set(0, 0, 0);
+    boundaryCheck();
+  }
+
+  void update() {
+
+    pPos.set(pos.x, pos.y);
+
+    vel.add(acc);
+    vel.mult(decay);
+    pos.add(vel);
+    acc.set(0, 0);
+
+    boundaryCheck();
+  }
+
+  void drawPtc() {
+    strokeWeight(weight);
+    stroke(0, 255);
+    if (aliveAnimate)line(pos.x, pos.y, pPos.x, pPos.y);
+    else point(pos.x, pos.y);
+  }
+
+  void drawCnt(Ptc coPtc, float scalar) {
+    strokeWeight((weight+coPtc.weight)*.5*scalar);
+    stroke(0, 255*scalar);
+    line(pos.x, pos.y, coPtc.pos.x, coPtc.pos.y);
+  }
+
+  void boundaryCheck() {
+    if (pos.x > width) {
+      pos.x = width;
+      vel.x *= -1;
+    } else if (pos.x < 0) {
+      pos.x = 0;
+      vel.x *= -1;
+    }
+    if (pos.y > height) {
+      vel.y *= -1;
+    } else if (pos.y < 0) {
+      vel.y *= -1;
+    }
+  }
+}
+// end region Alive
+// region Death
+final float g = 0.1;
+ArrayList<PVector> deathPath = new ArrayList();
+int deathIndex = 0;
+Body bs[];
+
+class Body {
+  float m;
+  PVector p, q, s;
+
+  Body(float m, PVector p) {
+    this.m = m;
+    this.p = p;
+    q = p;
+    this.s = new PVector(0, 0);
+  }
+
+  void update() {
+    s.mult(0.98);
+    p = PVector.add(p, s);
+  }
+
+  void attract(Body b) {
+    float d = constrain(PVector.dist(p, b.p), 10, 100);
+    PVector f = PVector.mult(PVector.sub(b.p, p), b.m * m * g / (d * d));
+    PVector a = PVector.div(f, m);
+    s.add(a);
+  }
+
+  void show() {
+    line(p.x, p.y, q.x, q.y);
+    q = p;
+  }
+}
+void setupDeath()
+{
+
+  background(255);
+  fill(255, 26);
+  deathPath.add(new PVector(30.5, 20.5));
+  deathPath.add(new PVector(30.5, 20.5));
+  deathPath.add(new PVector(30.5, 20.5));
+  deathPath.add(new PVector(30.5, 20.5));
+  deathPath.add(new PVector(30.5, 20.5));
+  deathPath.add(new PVector(30.5, 20.5));
+  deathPath.add(new PVector(30.5, 20.5));
+  deathPath.add(new PVector(30.5, 20.5));
+  deathPath.add(new PVector(30.5, 20.5));
+  deathPath.add(new PVector(30.5, 20.5));
+  deathPath.add(new PVector(20.5, 10.5));
+  deathPath.add(new PVector(20.5, 10.5));
+  deathPath.add(new PVector(20.5, 10.5));
+  deathPath.add(new PVector(20.5, 10.5));
+  deathPath.add(new PVector(60.5, 70.5));
+  deathPath.add(new PVector(60.5, 70.5));
+  deathPath.add(new PVector(60.5, 70.5));
+  deathPath.add(new PVector(60.5, 70.5));
+  deathPath.add(new PVector(60.5, 70.5));
+  deathPath.add(new PVector(60.5, 70.5));
+  deathPath.add(new PVector(60.5, 70.5));
+  deathPath.add(new PVector(60.5, 70.5));
+  deathPath.add(new PVector(60.5, 70.5));
+  deathPath.add(new PVector(60.5, 70.5));
+  deathPath.add(new PVector(60.5, 70.5));
+  deathPath.add(new PVector(60.5, 70.5));
+  deathPath.add(new PVector(60.5, 70.5));
+  deathPath.add(new PVector(60.5, 70.5));
+  deathPath.add(new PVector(60.5, 70.5));
+  deathPath.add(new PVector(60.5, 70.5));
+  deathPath.add(new PVector(160.5, 170.5));
+  deathPath.add(new PVector(160.5, 170.5));
+  deathPath.add(new PVector(160.5, 170.5));
+  deathPath.add(new PVector(160.5, 170.5));
+  deathPath.add(new PVector(160.5, 170.5));
+  deathPath.add(new PVector(160.5, 170.5));
+  deathPath.add(new PVector(160.5, 170.5));
+  deathPath.add(new PVector(160.5, 170.5));
+  deathPath.add(new PVector(160.5, 170.5));
+  deathPath.add(new PVector(160.5, 170.5));
+  deathPath.add(new PVector(160.5, 170.5));
+  deathPath.add(new PVector(160.5, 170.5));
+  deathPath.add(new PVector(160.5, 170.5));
+  deathPath.add(new PVector(160.5, 170.5));
+  deathPath.add(new PVector(160.5, 170.5));
+  bs = new Body[1000];
+  for (int i = 0; i < bs.length; i++) {
+    bs[i] = new Body(1, new PVector(random(width), random(height)));
+  }
+}
+void drawDeath()
+{
+  noStroke();
+  rect(0, 0, width, height);
+
+  stroke(0);
+  Body a = new Body(1000, deathPath.get(deathIndex));
+  if (deathIndex + 1 == deathPath.size())
+  {
+    deathIndex = 0;
+  } else 
+  {
+    deathIndex++;
+  }
+  for (Body b : bs) {
+    b.show();
+    b.attract(a);
+    b.update();
+  }
+}
+// end region Death
 
 
 class ZObject {
@@ -108,7 +413,18 @@ class ZObject {
     float posY = (ZOOM*y*HEIGHT*(1+z*z)) - ZOOM*yoffs*HEIGHT*z*z;
     float radius = z*xsize;
     if (posX> -xsize*2 && posX < WIDTH+xsize*2 && posY > -xsize*2 && posY < HEIGHT+xsize*2) {
-      blurred_circle(posX, posY, radius, abs(z-FOCAL_LENGTH), shaded_color, MIN_BLUR_LEVELS + (z*BLUR_LEVEL_COUNT));
+      if (true) {
+        blurred_circle(posX, posY, radius, abs(z-FOCAL_LENGTH), shaded_color, MIN_BLUR_LEVELS + (z*BLUR_LEVEL_COUNT));
+      }
+    }
+    //if (radius<1 && value==1) {
+    if (radius<1 && count >start_ripple) {
+      for (int i=0; i<2; i++) {
+        drops.add(new Circle(posX, posY, r-10*i));
+      }
+
+
+      //text("Value from moonlander: " + radius, 10, 20);
     }
   }
 }
@@ -118,6 +434,7 @@ void blurred_circle(float x, float y, float rad, float blur, color col, float le
   float level_distance = BLUR_AMOUNT*(blur)/levels;
   for (float i=0.0; i<levels*2; i++) {
     fill(col, 255*(levels*2-i)/(levels*2));
+
     ellipse(x, y, rad+(i-levels)*level_distance, rad+(i-levels)*level_distance);
   }
 }
@@ -145,13 +462,22 @@ void sortBubbles() {
 }
 
 void setup() {
+  frameRate(24);
+
+  //audio stuff  
+  moonlander = Moonlander.initWithSoundtrack(this, "Eternal_Terminal.mp3", 120, 4);
+  moonlander.start();
+
+
+
+  //size(800, 600);
   fullScreen(P3D);  
   //size(1920, 1080);
   smooth();
   noStroke();
 
   objects = new ArrayList();
-  // Randomly generate the bubbles
+  //Randomly generate the bubbles
   for (int i=0; i<N; i++) {
     objects.add(new ZObject(random(1.0f), random(1.0f), random(1.0f), color(random(20.0, 20.0), random(150.0, 190.0), random(150.0, 190.0))));
   }
@@ -159,9 +485,9 @@ void setup() {
   sortBubbles();
   //ripple stuff
   drops=new ArrayList();
-
-
   //ripple stuff end
+  setupDeath();
+  setupAlive();
 }
 //ripple stuff
 float r=0;
@@ -186,38 +512,63 @@ boolean zoomOut = true;
 
 float xoffs = 0.5;
 float yoffs = 0.5;
-float cameraYOff = 0.015;
+int count=0;
+int n=0;
+float m=0;
 void draw() {
+  m=min((m+0.1), 150);
+  n=(int)m;
+  if (count>start_ripple+200) {
+    BACKGROUND = color(0+(count-start_ripple-200)/3, 30+(count-start_ripple-200)/3, 30+(count-start_ripple-200)/3);
+  }
+  //objects = new ArrayList();
+  //for (int i=0; i<N; i++) {
+  //  objects.add(new ZObject(random(1.0f), random(1.0f), random(1.0f), color(random(20.0, 20.0), random(150.0, 190.0), random(150.0, 190.0))));
+  //}
+  //N++;
+  //audio stuff
+  moonlander.update();
+  value = moonlander.getValue("Eternal_Terminal");
+
+  text("Value from moonlander: " + value, 10, 20);
+  if (value ==12.4)
+  {
+    setupDeath();
+    drawDeath();
+  }
+
+  //temp useless
+  count++;
   background(BACKGROUND);
-  camera(width/2.0, height/2.0 , ((height/2.0) / tan(PI*30.0 / 180.0) - cameraYOff),
-  width/2.0, height/2.0, 0,
-  0, 1, 0); 
-  cameraYOff += 2.15;
-  // eyeX, eyeY, eyeZ
-       //  0.0, 0.0, 0.0, // centerX, centerY, centerZ
-       //  0.0, 1.0, 0.0); // upX, upY, upZ
   //xoffs = xoffs*0.9 + 0.1*mouseX/WIDTH;
   //yoffs = yoffs*0.9 + 0.1*mouseY/HEIGHT;
 
-  for (int i=0; i<N; i++) {
+  for (int i=0; i<n; i++) {
     ZObject current = (ZObject)objects.get(i);
     current.update(zoomIn, zoomOut);
   }
   sortBubbles();
 
-  for (int i=0; i<N; i++) {
+  for (int i=0; i<n; i++) {
     ((ZObject)objects.get(i)).draw(xoffs, yoffs);
   }
   //fill(108, 192, 255);
   //noStroke();
   //rect(0, 0, width, height);
-  for (int i=0;i<drops.size();i++) {
+  for (int i=0; i<drops.size(); i++) {
     Circle drop=drops.get(i);
     drop.display();
     drop.movement();
   }
   //drops.add(new Circle((int)(randomGaussian()*100+300),(int)(randomGaussian()*100+300), r));
-  
+  fill(255);
+  strokeWeight(2);
+  textSize(16);
+  text("FrameRate: " + int(frameRate), 10, 20);
+  strokeWeight(0.5);
+  //setupDeath();
+  drawDeath();
+  drawAlive();
 }
 
 
@@ -230,18 +581,22 @@ class Circle {
     y=tempY;
     rad=tempR;
   }
+
   void display() {
     noFill();
-    stroke(255, 255-rad/2);
+    //stroke(100, 100-rad/2);
+    //strokeWeight(0.5);
+    stroke(255, 200-2*rad);
+
     strokeWeight(0.5);
     ellipse(x, y, rad, rad);
     noStroke();
-    
   }
 
   void movement() {
     rad++;
-    if (255-rad/2<0) {
+    if (255-2*rad<0) {
+      //if (false) {
       drops.remove(0);
     }
   }
