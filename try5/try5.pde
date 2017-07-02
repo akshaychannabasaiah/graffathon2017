@@ -1,3 +1,10 @@
+PFont myFont;  //for font
+String[] message = {"Puddle of Infinity - Wind Marching For Rain", "Dewdrop Fantasy - Kevin MacLeod", "Ambient Ambulance - Jingle Punks", "Inner Sanctum - Kevin MacLeod", "Epic Unease - Kevin MacLeod"};
+int SIZE=400;
+
+
+
+
 //int start_ripple = 600;
 //int stop_ripple =1200;
 int col=0;
@@ -181,7 +188,7 @@ void setup() {
 
 
   //size(800, 600);
-  fullScreen(P3D);  
+  fullScreen(P2D);  
   //size(1920, 1080);
   smooth();
   noStroke();
@@ -200,7 +207,8 @@ void setup() {
   //ripple stuff end
 
   setupAlive();
-  setupDeath();  
+  setupDeath(); 
+  font_setup();
 }
 //ripple stuff
 float r=0;
@@ -294,13 +302,40 @@ void draw() {
   fill(255);
   strokeWeight(2);
   textSize(16);
-  text("Value from moonlander: " + value, 10, 20);
+  //text("Value from moonlander: " + value, 10, 20);
   strokeWeight(0.5);
 
   if (value!=420 && value == 70) {
     //drawDeath();
     drawAlive();
   }
+
+  if (value!=420 && value == 80) {
+    //drawDeath();
+    drawAlive();
+  }
+    if (value!=420 && value == 90) {
+    //drawDeath();
+    drawAlive();
+  }  
+  if (value!=420 && value == 100) {
+    strokeWeight(1);
+    fill(255,25.5);
+    drawDeath();
+    //drawAlive();
+  }
+    if (value!=420 && value == 110) {
+      
+    drawDeath();
+    //drawAlive();
+  }
+  if (value!=420 && value == 120) {
+    //drawDeath();
+    font_draw();
+  }
+
+
+
 }
 
 
@@ -559,51 +594,23 @@ void setupDeath()
 
   background(255);
   fill(255, 26);
-  deathPath.add(new PVector(30.5, 20.5));
-  deathPath.add(new PVector(30.5, 20.5));
-  deathPath.add(new PVector(30.5, 20.5));
-  deathPath.add(new PVector(30.5, 20.5));
-  deathPath.add(new PVector(30.5, 20.5));
-  deathPath.add(new PVector(30.5, 20.5));
-  deathPath.add(new PVector(30.5, 20.5));
-  deathPath.add(new PVector(30.5, 20.5));
-  deathPath.add(new PVector(30.5, 20.5));
-  deathPath.add(new PVector(30.5, 20.5));
-  deathPath.add(new PVector(20.5, 10.5));
-  deathPath.add(new PVector(20.5, 10.5));
-  deathPath.add(new PVector(20.5, 10.5));
-  deathPath.add(new PVector(20.5, 10.5));
-  deathPath.add(new PVector(60.5, 70.5));
-  deathPath.add(new PVector(60.5, 70.5));
-  deathPath.add(new PVector(60.5, 70.5));
-  deathPath.add(new PVector(60.5, 70.5));
-  deathPath.add(new PVector(60.5, 70.5));
-  deathPath.add(new PVector(60.5, 70.5));
-  deathPath.add(new PVector(60.5, 70.5));
-  deathPath.add(new PVector(60.5, 70.5));
-  deathPath.add(new PVector(60.5, 70.5));
-  deathPath.add(new PVector(60.5, 70.5));
-  deathPath.add(new PVector(60.5, 70.5));
-  deathPath.add(new PVector(60.5, 70.5));
-  deathPath.add(new PVector(60.5, 70.5));
-  deathPath.add(new PVector(60.5, 70.5));
-  deathPath.add(new PVector(60.5, 70.5));
-  deathPath.add(new PVector(60.5, 70.5));
-  deathPath.add(new PVector(160.5, 170.5));
-  deathPath.add(new PVector(160.5, 170.5));
-  deathPath.add(new PVector(160.5, 170.5));
-  deathPath.add(new PVector(160.5, 170.5));
-  deathPath.add(new PVector(160.5, 170.5));
-  deathPath.add(new PVector(160.5, 170.5));
-  deathPath.add(new PVector(160.5, 170.5));
-  deathPath.add(new PVector(160.5, 170.5));
-  deathPath.add(new PVector(160.5, 170.5));
-  deathPath.add(new PVector(160.5, 170.5));
-  deathPath.add(new PVector(160.5, 170.5));
-  deathPath.add(new PVector(160.5, 170.5));
-  deathPath.add(new PVector(160.5, 170.5));
-  deathPath.add(new PVector(160.5, 170.5));
-  deathPath.add(new PVector(160.5, 170.5));
+  deathPath.add(new PVector(width/2 - 25, height/2));
+  deathPath.add(new PVector(width/2 - 25, height/2));
+  deathPath.add(new PVector(width/2 - 25, height/2));
+  deathPath.add(new PVector(width/2 - 25, height/2));
+  deathPath.add(new PVector(width/2 - 25, height/2));
+  deathPath.add(new PVector(width/2 - 25, height/2));
+  deathPath.add(new PVector(width/2, height/2));
+  deathPath.add(new PVector(width/2, height/2));
+  deathPath.add(new PVector(width/2, height/2));
+  deathPath.add(new PVector(width/2, height/2));
+  deathPath.add(new PVector(width/2, height/2));
+  deathPath.add(new PVector(width/2, height/2));
+  deathPath.add(new PVector(width/2 + 25, height/2));
+  deathPath.add(new PVector(width/2 + 25, height/2));
+  deathPath.add(new PVector(width/2 + 25, height/2));
+  deathPath.add(new PVector(width/2 + 25, height/2));
+  deathPath.add(new PVector(width/2 + 25, height/2));
   bs = new Body[1000];
   for (int i = 0; i < bs.length; i++) {
     bs[i] = new Body(1, new PVector(random(width), random(height)));
@@ -630,3 +637,25 @@ void drawDeath()
   }
 }
 // end region Death
+
+
+
+
+void font_setup() {
+  myFont = loadFont("CharterBT-Italic-200.vlw");
+}
+
+void font_draw() {
+  background(255);
+  textFont(myFont, 100);
+  fill(0);
+  text("CREDITS", 50, 150);
+
+
+  for (int i=0; i<message.length; i++) {
+    //rect(0, 0, width, height);    
+    textFont(myFont, 50);
+    fill(0);
+    text(message[i], 50, 250+i*50);
+  }
+}
