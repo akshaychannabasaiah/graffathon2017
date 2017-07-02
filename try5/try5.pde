@@ -188,8 +188,8 @@ void setup() {
 
 
   //size(800, 600);
-  fullScreen(P2D);  
-  //size(1920, 1080);
+  //fullScreen(P2D);  
+  size(1920, 1080,P2D);
   smooth();
   noStroke();
 
@@ -273,15 +273,7 @@ void draw() {
     current.update(zoomIn, zoomOut);
   }
   //} 
-  if (value>=60 && value<70) {
-
-    //background(0);
-    //blendMode(ADD);
-    //stroke(102);
-    //strokeWeight(30);
-    //line(25, 25, 75, 75);
-    //line(75, 25, 25, 75);
-  }
+  
 
 
   sortBubbles();
@@ -319,6 +311,7 @@ void draw() {
     drawAlive();
   }  
   if (value!=420 && value == 100) {
+    //setupDeath();
     strokeWeight(1);
     fill(255,25.5);
     drawDeath();
